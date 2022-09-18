@@ -28,8 +28,7 @@ object ChatService {
 
     fun addChat(userId: Int, chat: Chat): Chat{
         chatCounter++
-        val newChat = chat.copy(chatId = chatCounter)
-        chats[userId] = newChat
+        chats[userId] = chat.copy(chatId = chatCounter)
         return chats[userId] ?: throw ChatNoAddException("Chat not added")
     }
 
@@ -37,7 +36,7 @@ object ChatService {
 
     fun getChats() = chats.toList()
 
-    fun getUnreadChatsCount() = chats.filter { it.value.unreadMess }.count()
+    fun getUnreadChatsCount() = chats.asSequence().filter { it.value.unreadMess }.count()
 
     fun addMessage(mess: Message): Boolean {
         val addMess = chats.getOrElse(mess.userId){addChat(mess.userId, Chat(0, mess.userId, unreadMess = true))}
@@ -60,8 +59,8 @@ object ChatService {
 
 
     fun getMessages(userId: Int, messId: Int, count: Int): List<Message> {
-        return chats[userId]?.messages?.filter { it.messId in messId until messId + count }
-            ?.onEach { it.copy(read = true) }  ?: throw MessageNotFoundException ("Messages not found")
+        return chats[userId]?.messages?.asSequence()?.filter { it.messId in messId until messId + count }
+            ?.onEach { it.copy(read = true) }?.toList() ?: throw MessageNotFoundException ("Messages not found")
     }
 }
 
